@@ -26,12 +26,52 @@ suits:
     dw " of Clubs"
     dw " of Spades"
 
+
+x_0: dw 0x1563   ; seed/current val
+a: dw 0x05       ; factor
+m: dw 0x315d     ; prime number
+x_k: dw 0x00     ; current iteration
+decks: db 0x02   ; number of decks being used, up to 3
+curr: db [0x00, 0x04]  ; stores in use cards
+cards: db [0x00, 0x34] ; stores times cards used
+
+def _lehmer_ {
+    mul bx      ; ax * bx
+    div cx      ; ax mod cx, res to dx
+    mov ax, dx
+    mov word x_k, dx
+    inc si
+    mov bx, 52
+    div bx      ; ax mod bx, res to dx
+    ret
+}
+
 start:
-; TODO: This will be replaced by Lehmer's Algorithm to choose cards
-    mov dl, 0x15            ; the Randomly Chosen Card to be printed out 
-    mov ah, 0x13            ; move BIOS interrupt number in AH
-    mov cx, 23              ; move length of string in cx
-    mov bx, 0               ; mov 0 to bx, so we can move it to es
-    mov es, bx              ; move segment start of string to es, 0
-    mov BP, OFFSET suits    ; move start offset of string in bp
-    int 0x10                ; BIOS interrupt
+    mov ax, word x_0    ; loads seed
+    mov bx, word a      ; loads regs bx and cx
+    mov cx, word m
+    mul bx              ; ax * bx
+    div cx              ; ax mod cx, res to dx
+    mov ax, dx
+    mov word x_k, dx
+    
+_loop_sel:
+    cmp di, 0x04         ; loop to select 4 cards (2 for user, 2 for computer)
+    je _exit_loop
+    call _lehmer_        ; gives random number
+    mov si, OFFSET cards ; load array of used cards
+    add si, dx
+    mov al, byte[si]     ; move uses to al
+    mov bl, byte decks
+    cmp al, bl           ; check to see if it's been used
+    jge _loop_sel        ; select again if can't be used
+    inc al               ; inc uses
+    mov byte[si], al
+    mov si, OFFSET curr
+    inc si
+    add si, di
+    mov word[si], dx  ; load the current card into the 4 cards in play
+    inc di
+    jmp _loop_sel
+    
+_exit_loop:

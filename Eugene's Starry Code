@@ -16,15 +16,6 @@ cards:
 ; Cards Numbered between 40 and 52 are in the Suit of Spades
     db 0x28 db 0x29 db 0x2A db 0x2B db 0x2C db 0x2D db 0x2E 
     db 0x2F db 0x30 db 0x31 db 0x32 db 0x33 db 0x34
-    
-ace: 
-    dw "Ace"
-    
-suits:
-    dw " of Diamonds"
-    dw " of Hearts"
-    dw " of Clubs"
-    dw " of Spades"
 
 
 x_0: 

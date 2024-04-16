@@ -27,13 +27,20 @@ suits:
     dw " of Spades"
 
 
-x_0: dw 0x1563   ; seed/current val
-a: dw 0x05       ; factor
-m: dw 0x315d     ; prime number
-x_k: dw 0x00     ; current iteration
-decks: db 0x02   ; number of decks being used, up to 3
-curr: db [0x00, 0x04]  ; stores in use cards
-cards: db [0x00, 0x34] ; stores times cards used
+x_0: 
+    dw 0x1563   ; seed/current val
+a: 
+    dw 0x05       ; factor
+m: 
+    dw 0x315d     ; prime number
+x_k: 
+    dw 0x00     ; current iteration
+decks: 
+    db 0x02   ; number of decks being used, up to 3
+curr: 
+    db [0x00, 0x04]  ; stores in use cards
+cards: 
+    db [0x00, 0x34] ; stores times cards used
 
 def _lehmer_ {
     mul bx      ; ax * bx

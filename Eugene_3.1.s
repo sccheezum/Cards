@@ -5,32 +5,35 @@
 ;
 ; Representing Cards and Bets and Wins on the Screen 
 
-
 ace:
     db "Ace "
-    
 jack:
     db "Jack "
-    
 queen:
     db "Queen "
-    
 king:
     db "King "
-    
 diamond:
     db "of Diamonds" 
-    
 heart:
     db "of Hearts"
-    
 club: 
     db "of Clubs"
-    
 spade:
     db "of Spades"
     
 
+def printAce {
+    mov cx, 4
+    mov SP, OFFSET ace
+    int 0x10
+    ret
+}
+def checkAce {
+    cmp dh, 0x01
+    call printAce
+    ret
+}
 def checkDiamond {
     cmp dh, 0x0D ; Upper Limit of Diamonds (Adjust if Necessary)
     jbe print_diamonds
@@ -52,13 +55,7 @@ def checkClub {
 def checkSpade {
     cmp dh, 0x34 ; Upper Limit of Spades (Adjust if Necessary)
     jbe print_spades
-    ret
-}
-
-def printAce {
-    mov si, dh
-    cmp si, 0x01
-    
+    call printAce
     ret
 }
 
@@ -75,6 +72,7 @@ start:
     call checkSpade
 
 print_diamonds:
+    call checkAce
     mov cx, 11              ; move length of string in cx
     mov BP, OFFSET diamond   ; move start offset of string in bp
     int 0x10                ; BIOS interrupt
@@ -83,20 +81,22 @@ print_diamonds:
 print_hearts:
     mov cx, 9              ; move length of string in cx
     mov BP, OFFSET heart   ; move start offset of string in bp
-    int 0x10                ; BIOS interrupt
+    int 0x10               ; BIOS interrupt
     jmp end
     
 print_clubs:
     mov cx, 8              ; move length of string in cx
     mov BP, OFFSET club    ; move start offset of string in bp
-    int 0x10                ; BIOS interrupt
+    int 0x10               ; BIOS interrupt
     jmp end
 
 print_spades:
     mov cx, 9              ; move length of string in cx
     mov BP, OFFSET spade   ; move start offset of string in bp
-    int 0x10                ; BIOS interrupt
+    int 0x10               ; BIOS interrupt
     jmp end
     
 end:
+
+
     

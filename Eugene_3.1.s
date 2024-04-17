@@ -4,7 +4,6 @@
 ; Eugene Thompson
 ;
 ; Representing Cards and Bets and Wins on the Screen 
-
 ace:
     db "Ace "
 jack:
@@ -53,10 +52,13 @@ def printKing {
 }
 
 def printNumber {
-    mov ah, 0x13
-    mov SP, [dh]
+    mov ax, 0
+    mov al, dh
+    mov sp, ax
     mov cx, 2
+    mov ah, 0x13
     int 0x10
+    sub dh, 0x30
     jmp check_suits
 }
 

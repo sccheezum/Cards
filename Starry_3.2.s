@@ -1,4 +1,4 @@
-; Represent Cards and Bets and Wins on the Screen :)
+; Randomly Card Picking and Tracking (3.2)
 
 cards: 
 ; Cards Numbered between 1 and 13 are in the Suit of Diamonds

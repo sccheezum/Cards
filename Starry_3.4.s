@@ -39,6 +39,10 @@ current_bet_buffer:
     
 continue_game_buffer:
     db [0x00, 0x01]
+
+user_choice_buffer:
+    db [0x00, 0x01]
+
 ; Prompt Messages
     
 initial_bet_msg:
@@ -91,12 +95,27 @@ hard_mode_msg:
     
 ask_bet_msg:
     db "Place your Bets! Make sure you are betting how much you have left..."
+
+user_choice_msg:
+    db "Please indicate which choice you would like to make from the following options:
+
+player_keep_hand_msg:
+    db "Press '1' if you would like to keep your current Hand!"
+
+player_add_card_msg:
+    db "Press '2' if you would like to add a card to your current Hand!"
+
+player_forfeit_card_msg:
+    db "Press '3' if you would like to forfeit your turn..."
     
 winning_msg:
     db "Congratulations, you won the bet!""
     
 losing_msg:
     db "Unfortunately, you lost the bet..."
+
+neither_won_message:
+    db "Neither side has won yet, there's still time to win!"
     
 ask_another_turn_msg:
     db "If you would like to continue, press '1' otherwise press '0' to quit"
@@ -427,7 +446,51 @@ def askUserForBet {
 }
 
 def askUserForChoice {
-    ; Asks User if they want to 
+    ; Ask User to Keep Hand, or
+    ; Add One More Card, jumping to add_card
+    ; Forfeit Turn and lose their current bet to the computer,
+    mov ah, 0x13
+    mov cx, 62
+    mov bx, 0
+    mov es, bx
+    mov bp, OFFSET user_choice_msg
+    mov dl, 0
+    int 0x10
+    
+    mov cx, 78
+    mov bp, OFFSET player_keep_hand_msg
+    int 0x10
+    
+    mov cx, 65
+    mov bp, OFFSET player_add_card_msg
+    int 0x10
+    
+    mov cx, 71
+    mov bp, OFFSET player_forfeit_card_msg
+    int 0x10
+    
+    ; System waits for response
+    mov ah, 0x0a
+    lea dx, word user_choice_buffer
+    ; Using interrupt (0x21) here to read input
+    int 0x21 
+    
+    mov si, OFFSET user_choice_buffer
+    add si, 2
+    mov bl, 0x30
+
+; System checks if the response is valid
+    mov al, byte [si]
+    cmp al, 0x31
+    jl user_choice
+    cmp al, 0x33
+    jg user_choice
+    cmp al, 0x31
+    je keep_hand
+    cmp al, 0x32
+    je add_card
+    cmp al, 0x33
+    je player_forfeit_turn
 }
 
 
@@ -604,10 +667,6 @@ start_turn:
 
 
 user_choice:
-; Ask User to Keep Hand, or
-; Add One More Card, jumping to add_card
-; Forfeit Turn and lose their current bet to the computer,
-; which jumps to comp_choice
     call askUserForChoice
 
 
@@ -617,7 +676,18 @@ keep_hand:
 add_card:
 ; Implement Adding Cards Later...
 
-no_win:
+player_forfeit_turn:
+; Player forfeits turn to computer
+
+no_win_yet:
+; Displays a message that neither side won yet:
+    mov ah, 0x13
+    mov cx, 62
+    mov bx, 0
+    mov es, bx
+    mov bp, OFFSET neither_won_message
+    mov dl, 0
+    int 0x10
 	jmp user_choice
 
 win_to_comp:

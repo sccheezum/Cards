@@ -36,8 +36,8 @@ comp_kept_hand_msg:
 comp_added_card_msg:
     db "Computer added a card to its hand!"
 
-comp_forfeitted_turn_msg:
-    db "Computer forfeitted its turn to player!"
+comp_forfeited_turn_msg:
+    db "Computer forfeited its turn to player!"
     
 choose_comp_risk_lvl_msg:
     db "Choose the Computer's Risk Levels below:"
@@ -178,11 +178,29 @@ _choose_action:
     
     
 comp_keep_hand:
-; TODO: Display the message that the computer kept the hand
+    mov ah, 0x13
+    mov cx, 23
+    mov bx, 0
+    mov es, bx
+    mov bp, OFFSET comp_kept_hand_msg
+    mov dl, 0
+    int 0x10
 
 comp_add_card:
-; TODO: Display the message that the computer added a card
+    mov ah, 0x13
+    mov cx, 32
+    mov bx, 0
+    mov es, bx
+    mov bp, OFFSET comp_added_card_msg
+    mov dl, 0
+    int 0x10
 
 comp_forfeit_turn:
-; TODO: Display the message that the computer forfeitted a turn
+    mov ah, 0x13
+    mov cx, 38
+    mov bx, 0
+    mov es, bx
+    mov bp, OFFSET comp_forfeited_turn_msg
+    mov dl, 0
+    int 0x10
 

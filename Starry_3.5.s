@@ -81,7 +81,8 @@ def askForCompRiskLevel {
     add si, 5
     mov al, byte [si]
     
-    
+; TODO: Cut Here to ask for add card value for a different procedure:
+
     mov ah, 0x13
     mov cx, 77
     mov bp, OFFSET comp_add_card_lvl_msg
@@ -97,7 +98,8 @@ def askForCompRiskLevel {
     add si, 4
     mov al, byte [si]
     
-    
+; TODO: Cut Here to ask for forfeit turn value for a different procedure:
+
     mov ah, 0x13
     mov cx, 79
     mov bp, OFFSET comp_forfeit_turn_msg

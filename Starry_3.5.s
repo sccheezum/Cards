@@ -153,30 +153,26 @@ _choose_action:
     mov si, 0
     mov bx, 100 ; modulus by 100 to determine what card between 0-51 is selected
     div bx      ; ax mod bx, result is saved in dx
-    lea ax, word comp_keep_hand_buffer
-    lea bx, word comp_add_card_buffer
-    lea cx, word comp_forfeit_turn_buffer
+    lea ax, word comp_keep_hand_buffer      ; load the keep hand percent
+    lea bx, word comp_add_card_buffer       ; load the add card percent
     
-    mov si, OFFSET comp_keep_hand_buffer
-    mov di, OFFSET comp_add_card_buffer
+    mov si, OFFSET comp_keep_hand_buffer    ; move the index to the keep hand val
+    mov di, OFFSET comp_add_card_buffer     ; move the index to the add card val
     
-    mov al, byte [si]
-    mov bl, byte [di]
+    mov al, byte [si]                       ; moving the keep hand val to al
+    mov bl, byte [di]                       ; moving the add card val to bl
     
-    mov si, OFFSET comp_forfeit_turn_buffer
-    mov cl, byte [si]
+    add bl, al                              ; add for the upper limit for add card
+    mov cl, 100                             ; assign upper limit for forfeit turn
     
-    add bl, al
-    add cl, bl
+    cmp dl, al                              ; checks between random num and keep hand 
+    jbe comp_keep_hand                      ; if under upper limit, go to keep hand
     
-    cmp dl, al
-    jbe comp_keep_hand
+    cmp dl, bl                              ; check between random num and add card 
+    jbe comp_add_card                       ; if under upper limit go to add card
     
-    cmp dl, bl
-    jbe comp_add_card
-    
-    cmp dl, cl
-    jbe comp_forfeit_turn
+    cmp dl, cl                              ; check between random num and forfeit turn 
+    jbe comp_forfeit_turn                   ; if under upper limit go to forfeit turn
     
     
 comp_keep_hand:

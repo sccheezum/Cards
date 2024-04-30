@@ -7,17 +7,14 @@
 comp_keep_hand_buffer:
 ; Adjust the first byte for testing
     db 20
-    db [0x00, 0x04]
     
 comp_add_card_buffer:
 ; Adjust the first byte for testing
     db 40
-    db [0x00, 0x04]
     
 comp_forfeit_turn_buffer:
 ; Adjust the first byte for testing
     db 40
-    db [0x00, 0x04]
 
 x_0: 
     dw 0x1563     ; current val, init as seed (x_0)
@@ -51,10 +48,6 @@ comp_add_card_lvl_msg:
 comp_forfeit_turn_msg:
     db "Input a number between 0-100, enter how likely the computer will forfeit a turn"
 
-; TODO: Implement a better version of the ASCII conversion to put the correct value
-; at the start of the buffer
-
-
 
 def askForCompRiskLevel {
 ; User can choose between three computer risk levels:
@@ -81,8 +74,6 @@ def askForCompRiskLevel {
     add si, 5
     mov al, byte [si]
     
-; TODO: Cut Here to ask for add card value for a different procedure:
-
     mov ah, 0x13
     mov cx, 77
     mov bp, OFFSET comp_add_card_lvl_msg
@@ -98,8 +89,6 @@ def askForCompRiskLevel {
     add si, 4
     mov al, byte [si]
     
-; TODO: Cut Here to ask for forfeit turn value for a different procedure:
-
     mov ah, 0x13
     mov cx, 79
     mov bp, OFFSET comp_forfeit_turn_msg
@@ -116,13 +105,6 @@ def askForCompRiskLevel {
     add si, 4
     mov al, byte [si]
     
-    
-
-; System checks if the response is valid
-; Otherwise, jumps to invalid_comp_risk_level
-
-    ; TODO: Make Check to make sure it adds to 100
-
 
 	ret
 }

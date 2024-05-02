@@ -304,7 +304,6 @@ start:
     mov bl, byte c_bet
     add al, 0x32       ; player bets 50 (NEED TO CHANGE VALUE TO INTERACT WITH USER)
     mov byte p_bet, al
-; Error here, Comparison Arguments cannot be sent to procedures
     cmp byte c_bet_mode, 0x01 ; comparing to determine what bet mode comp is in
     jl _call_conservative 
     cmp byte c_bet_mode, 0x01 ; comparing to determine what bet mode comp is in

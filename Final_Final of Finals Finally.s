@@ -459,6 +459,8 @@ def askUserForNextTurn {
 	ret
 }
 
+    
+; User Configuration:
 
 
 start:
@@ -467,12 +469,6 @@ start:
 	call askForCompBetMode
 	call askForCompRiskLevel
 	call askDifficultyMode
-
-
-    
-    
-
-; User Configuration:
 
 
 
@@ -790,10 +786,6 @@ comp_forfeit_turn:
 ; Checking Winnings and Next Turn:
 
 
-turn_action:
-; Check if a player’s total card value does not exceed 21
-; Check if the user decided
-
 check_win:
 ; Checks if either player has reached 21 in their hand
 ; If so, that turn is won, and the opponent’s bet value is given
@@ -850,17 +842,6 @@ _c_win:
     mov byte p_total, cl
     jmp check_turn_requirements
 
-_end:
-    ; if ending due to no more cards or players choice then compare total wins
-    ; If losing a bet results in no money then the player with money remaining wins 
-    mov al, byte p_wins
-    mov bl, byte c_wins
-    cmp al, bl
-    jg _p_game_win
-    jl _c_game_win
-
-
-
 check_hold_win:
 	; If the player that is closest to 21 wins, and their opponent’s
 	; earnings goes to the other player
@@ -883,3 +864,10 @@ next_turn:
 
 end_game:
 ; Displays Wins and which Player that Won
+    ; if ending due to no more cards or players choice then compare total wins
+    ; If losing a bet results in no money then the player with money remaining wins 
+    mov al, byte p_wins
+    mov bl, byte c_wins
+    cmp al, bl
+    jg _p_game_win
+    jl _c_game_win

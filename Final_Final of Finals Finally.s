@@ -290,10 +290,17 @@ def checkSpecialValue {
     ret
 }
 
-def areCardsLeft {
+def initializeCardsLeft {
 ; Checks if there are no cards left
 ; If there are cards, continue
 ; Otherwise, jmp game_end:
+    mov si, OFFSET cards_used   ; Load the array of used cards
+    mov bl, byte current_deck   ; Loads current Deck
+    mov ax, si                  ; Setting Maximum Cap for Loop
+    mul bl                      ; Sets the Cap to the Current Deck
+    mov cx, ax                  ; Moves the Cap to CX
+    add cx, 52                  ; Move the Cap to the End of the Cards
+    jmp _loop_body
 	ret
 }
 
@@ -659,22 +666,13 @@ serve_computer_cards:
     mov ax, word x_k
     jmp serve_computer_cards
 
-_check_no_cards_left_loop:
-    mov si, OFFSET cards_used   ; Load the array of used cards
-    mov bl, byte current_deck   ; Loads current Deck
-    mov ax, si                  ; Setting Maximum Cap for Loop
-    mul bl                      ; Sets the Cap to the Current Deck
-    mov cx, ax                  ; Moves the Cap to CX
-    add cx, 52                  ; Move the Cap to the End of the Cards
-    jmp _loop_body
-    
+_check_no_cards_left:
+    call initializeCardsLeft
+
 _loop_body:
     mov al, byte [si]           ; Load Card
     cmp al, 0x00                ; Check if Card has been used
     je display_cards            ; If not, then continue game 
-    jmp _continue_loop          ; If used, continue loop    
-
-_continue_loop:
     inc si                      ; Increment to Next Card
     cmp si, cx                  ; If at end of the array, go to next deck
     je _goto_next_deck          
@@ -848,7 +846,7 @@ p_add_card:
 	call chooseRandomCard
 	call displayCard
 
-p_add_card:
+comp_add_card:
     call chooseRandomCard
     call displayCard
 comp_forfeit_turn:

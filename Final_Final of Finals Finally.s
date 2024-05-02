@@ -462,108 +462,19 @@ def askUserForNextTurn {
 
 
 start:
-    mov al, byte p_bet
-    mov bl, byte c_bet
-    add al, 0x32       ; player bets 50 (NEED TO CHANGE VALUE TO INTERACT WITH USER)
-    mov byte p_bet, al
-    cmp byte c_bet_mode, 0x01 ; comparing to determine what bet mode comp is in
-    jl _call_conservative 
-    cmp byte c_bet_mode, 0x01 ; comparing to determine what bet mode comp is in
-    je _call_normal
-    cmp byte c_bet_mode, 0x01 ; comparing to determine what bet mode comp is in
-    jg _call_aggressive
-
-_call_conservative:
-    call _conservative
-    jmp _continue
-    
-_call_normal:
-    call _normal
-    jmp _continue
-    
-_call_aggressive:
-    call _aggressive
-    jmp _continue
-    
-_continue:
-    mov al, byte p_sum
-    mov bl, byte c_sum
-    cmp al, 0x15 ; testing to see if player has reached 21
-    je _p_win
-    jg _c_win
-    cmp bl, 0x15
-    je _c_win
-    jg _p_win
-    cmp al, bl
-    je _tie
-    jg _p_win
-    jl _c_win
-
-_tie:
-    jmp _end
-    ; Display to the user that the round ended in a tie so no one won
-    ; (to be completed later with the rest of the front end work)
-
-_p_win:
-    mov al, byte p_wins
-    inc al
-    mov byte p_wins, al
-    mov al, byte c_bet
-    mov bl, byte p_total
-    mov cl, byte c_total
-    add bl, al
-    sub cl, al
-    cmp cl, 0x00
-    jle _p_game_win      ; if the computer has no money left, player wins
-    mov byte p_total, bl
-    mov byte c_total, cl
-    jmp _end
-
-_c_win:
-    mov al, byte c_wins
-    inc al
-    mov byte c_wins, al
-    mov al, byte p_bet
-    mov bl, byte c_total
-    mov cl, byte p_total
-    add bl, al
-    sub cl, al
-    cmp cl, 0x00
-    jle _c_game_win   ; if the player has no money left, computer wins
-    mov byte c_total, bl
-    mov byte p_total, cl
-    jmp _end
-
-_end:
-    ; if ending due to no more cards or players choice then compare total wins
-    ; If losing a bet results in no money then the player with money remaining wins 
-    mov al, byte p_wins
-    mov bl, byte c_wins
-    cmp al, bl
-    jg _p_game_win
-    jl _c_game_win
-    
-_p_game_win:
-    ; display that the player won
-    mov al, 0x11            ; placeholder val for testing (NEED TO CHANGE W/ USER INTERACT)
-
-_c_game_win:
-    ; Display that the computer won
-    mov al, 0xcc            ; placeholder val for testing (NEED TO CHANGE W/ USER INTERACT)
-
-    
-    
-; Initializes Key Variables used
-
-; User Configuration:
-
-
-user_config:
-	call askForInitialBet
+    call askForInitialBet
 	call askForNumDecks
 	call askForCompBetMode
 	call askForCompRiskLevel
 	call askDifficultyMode
+
+
+    
+    
+
+; User Configuration:
+
+
 
 invalid_initial_wager:
 ; Add additional information to guide user, then asks them again
@@ -601,11 +512,32 @@ ask_for_bet_again:
 	call askUserForBet
 	call convertStringtoVal
 
-user_place_bet:
-; Player places bet here!
-
-computer_place_bet:
+place_bet:
+; Player placed bet based on the previous labels
 ; Computer places bet based off of the multiplier set by the betting mode
+    mov al, byte p_bet
+    mov bl, byte c_bet
+    add al, 0x32       ; player bets 50 (NEED TO CHANGE VALUE TO INTERACT WITH USER)
+    mov byte p_bet, al
+    cmp byte c_bet_mode, 0x01 ; comparing to determine what bet mode comp is in
+    jl _call_conservative 
+    cmp byte c_bet_mode, 0x01 ; comparing to determine what bet mode comp is in
+    je _call_normal
+    cmp byte c_bet_mode, 0x01 ; comparing to determine what bet mode comp is in
+    jg _call_aggressive
+
+_call_conservative:
+    call _conservative
+    jmp initialize
+    
+_call_normal:
+    call _normal
+    jmp initialize
+    
+_call_aggressive:
+    call _aggressive
+    jmp initialize
+    
 
 ;
 ; Dealing Cards Section:
@@ -867,10 +799,67 @@ check_win:
 ; If so, that turn is won, and the opponent’s bet value is given
 ; to that specific player (either win_ to_comp or win_to_player), 
 ; then jumps to next_turn
-
+    mov al, byte p_sum
+    mov bl, byte c_sum
+    cmp al, 0x15 ; testing to see if player has reached 21
+    je _p_win
+    jg _c_win
+    cmp bl, 0x15
+    je _c_win
+    jg _p_win
+    cmp al, bl
+    je _tie
+    jg _p_win
+    jl _c_win
 ; Otherwise, if a player exceeds 21 in their current hand
 ; that turn is lost to that player, and the wins are given to the 		
 ; opponent (either win_ to_comp or win_to_player)
+
+_tie:
+    jmp _end
+    ; Display to the user that the round ended in a tie so no one won
+    ; (to be completed later with the rest of the front end work)
+
+_p_win:
+    mov al, byte p_wins
+    inc al
+    mov byte p_wins, al
+    mov al, byte c_bet
+    mov bl, byte p_total
+    mov cl, byte c_total
+    add bl, al
+    sub cl, al
+    cmp cl, 0x00
+    jle _p_game_win      ; if the computer has no money left, player wins
+    mov byte p_total, bl
+    mov byte c_total, cl
+    jmp check_turn_requirements
+
+_c_win:
+    mov al, byte c_wins
+    inc al
+    mov byte c_wins, al
+    mov al, byte p_bet
+    mov bl, byte c_total
+    mov cl, byte p_total
+    add bl, al
+    sub cl, al
+    cmp cl, 0x00
+    jle _c_game_win   ; if the player has no money left, computer wins
+    mov byte c_total, bl
+    mov byte p_total, cl
+    jmp check_turn_requirements
+
+_end:
+    ; if ending due to no more cards or players choice then compare total wins
+    ; If losing a bet results in no money then the player with money remaining wins 
+    mov al, byte p_wins
+    mov bl, byte c_wins
+    cmp al, bl
+    jg _p_game_win
+    jl _c_game_win
+
+
 
 check_hold_win:
 	; If the player that is closest to 21 wins, and their opponent’s
@@ -880,11 +869,11 @@ check_hold_win:
 no_win:
 	jmp user_choice
 
-win_to_comp:
+_c_game_win:
 	call displayUserLost
 ; Transfers User’s Bet to Computer
 
-win_to_player:
+_p_game_win:
 	call displayUserWon
 ; Transfers Computer’s Bet to User
 

@@ -69,16 +69,24 @@ x_k:
 
 ; Tracking Bets and Wins Variables:
 
-p_sum: db 0x14      ; keeping track of current player card sum / score
-c_sum: db 0x15      ; these values are currently assigned due to the IPA's isolation
-
-p_bet: db 0x00      ; player & computer bet stores
-c_bet: db 0x00
-c_bet_mode: db 0x02 ; computer betting mode (0 - conservative, 1 - normal, 2 - aggressive)
-p_total: dw 0x00c8  ; total amount of money available for the player and computer
-c_total: dw 0x00c8  ; 200 for testing purposes
-p_wins: db 0x00     ; total wins for player and computer
-c_wins: db 0x00
+p_sum: 
+    db 0x14      ; keeping track of current player card sum / score
+c_sum: 
+    db 0x15      ; these values are currently assigned due to the IPA's isolation
+p_bet: 
+    db 0x00      ; player & computer bet stores
+c_bet: 
+    db 0x00
+c_bet_mode: 
+    db 0x02 ; computer betting mode (0 - conservative, 1 - normal, 2 - aggressive)
+p_total: 
+    dw 0x00c8  ; total amount of money available for the player and computer
+c_total: 
+    dw 0x00c8  ; 200 for testing purposes
+p_wins: 
+    db 0x00     ; total wins for player and computer
+c_wins: 
+    db 0x00
 
 ; Configuration Buffers
 bet_buffer:
@@ -841,11 +849,6 @@ _c_win:
     mov byte c_total, bl
     mov byte p_total, cl
     jmp check_turn_requirements
-
-check_hold_win:
-	; If the player that is closest to 21 wins, and their opponent’s
-	; earnings goes to the other player
-	; then, jumps to next_turn
 
 no_win:
 	jmp user_choice

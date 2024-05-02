@@ -4,191 +4,171 @@
 ; Eugene Thompson
 ;
 ; Representing Cards and Bets and Wins on the Screen 
+
 ace:
-    db "Ace "
+    db "Ace!"
+ten:
+    db "10!"
 jack:
-    db "Jack "
+    db "Jack!"
 queen:
-    db "Queen "
+    db "Queen!"
 king:
-    db "King "
+    db "King!"
 diamond:
-    db "of Diamonds" 
+    db " of Diamonds!" 
 heart:
-    db "of Hearts"
+    db " of Hearts!"
 club: 
-    db "of Clubs"
+    db " of Clubs!"
 spade:
-    db "of Spades"
-    
-def printAce {
-    mov ah, 0x13            ; move BIOS interrupt number in AH
-    mov cx, 4
-    mov SP, OFFSET ace
-    int 0x10
-    jmp check_suits
-}
+    db " of Spades!"
+card_name:
+    db [0x00,0x11]
 
-def printJack {
-    mov ah, 0x13            ; move BIOS interrupt number in AH
-    mov cx, 5
-    mov SP, OFFSET jack
-    int 0x10
-    jmp check_suits
-}
-def printQueen {
-    mov ah, 0x13            ; move BIOS interrupt number in AH
-    mov cx, 6
-    mov SP, OFFSET queen
-    int 0x10
-    jmp check_suits
-}
-def printKing {
-    mov ah, 0x13            ; move BIOS interrupt number in AH
-    mov cx, 5
-    mov SP, OFFSET king
-    int 0x10
-    jmp check_suits
-}
 
-def printNumber {
-    mov ax, 0
-    mov al, dh
-    mov sp, ax
-    mov cx, 2
-    mov ah, 0x13
-    int 0x10
-    sub dh, 0x30
-    jmp check_suits
-}
-
-def checkDiamond {
-    cmp dh, 0x0D ; Upper Limit of Diamonds (Adjust if Necessary)
-    jbe print_diamonds
-    ret
-}
-
-def checkHeart {
-    cmp dh, 0x1A ; Upper Limit of Hearts (Adjust if Necessary)
-    jbe print_hearts
-    ret
-}
-
-def checkClub {
-    cmp dh, 0x27 ; Upper Limit of Clubs (Adjust if Necessary)
-    jbe print_clubs
-    ret
-}
-
-def checkSpade {
-    cmp dh, 0x34 ; Upper Limit of Spades (Adjust if Necessary)
-    jbe print_spades
-    call printAce
-    ret
-}
 
 start:
 ; TODO: This will be replaced by Lehmer's Algorithm to choose cards in the final code
-    mov dh, 0x02            ; the Randomly Chosen Card to be printed out 
+    mov dl, 0x0E            ; the Randomly Chosen Card to be printed out 
+    mov al, dl              ; Assign the value of the card
+    mov cl, 0x0D              ; Diviser for Finding Card Value
+    mov di, OFFSET card_name
+    cmp dl, 0x0D                ; Checks if it is not a diamond
+    jae normalize_card_value    ; Normalizes its card value
+    call checkSpecialValue
+
+normalize_card_value:
+    div cl
+    call checkSpecialValue
     
-    mov cx, 13              ; Diviser for Finding Card Value
+diamond_card:
+    mov si, OFFSET diamond
+    jmp assign_diamonds_loop
+heart_card:
+    mov si, OFFSET heart
+    jmp assign_hearts_loop
+club_card:
+    mov si, OFFSET club
+    jmp assign_clubs_loop
+spade_card:
+    mov si, OFFSET spade
+    jmp assign_spades_loop
+ace_card:
+    mov si, OFFSET ace
+    jmp assign_ace_loop
+ten_card:
+    mov si, OFFSET ten
+    jmp assign_ten_loop
+jack_card:
+    mov si, OFFSET jack
+    jmp assign_jack_loop
+queen_card:
+    mov si, OFFSET queen
+    jmp assign_queen_loop
+king_card:
+    mov si, OFFSET king
+    jmp assign_king_loop
+    
+assign_ace_loop:
+    mov al, byte [si]
+    cmp al, 0x21
+    je continue_print
+    mov byte [di], al
+    inc si
+    inc di
+    jmp assign_ace_loop
+    
+assign_ten_loop:
+    mov al, byte [si]
+    cmp al, 0x21
+    je continue_print
+    mov byte [di], al
+    inc si
+    inc di
+    jmp assign_ten_loop
+
+assign_jack_loop:
+    mov al, byte [si]
+    cmp al, 0x21
+    je continue_print
+    mov byte [di], al
+    inc si
+    inc di
+    jmp assign_jack_loop
+
+assign_queen_loop:
+    mov al, byte [si]
+    cmp al, 0x21
+    je continue_print
+    mov byte [di], al
+    inc si
+    inc di
+    jmp assign_queen_loop
+
+assign_king_loop:
+    mov al, byte [si]
+    cmp al, 0x21
+    je continue_print
+    mov byte [di], al
+    inc si
+    inc di
+    jmp assign_king_loop
+
+assign_num:
+    add al, 0x30
+    mov byte [di], al
+    inc si 
+    inc di
+    jmp continue_print
+    
+continue_print:
+    inc di
+    call checkSuit
+
+assign_diamonds_loop:
+    mov al, byte [si]
+    cmp al, 0x21
+    je print_card
+    mov byte [di], al
+    inc si
+    inc di
+    jmp assign_diamonds_loop
+    
+assign_hearts_loop:
+    mov al, byte [si]
+    cmp al, 0x21
+    je print_card
+    mov byte [di], al
+    inc si
+    inc di
+    jmp assign_hearts_loop
+    
+assign_clubs_loop:
+    mov al, byte [si]
+    cmp al, 0x21
+    je print_card
+    mov byte [di], al
+    inc si
+    inc di
+    jmp assign_clubs_loop
+    
+assign_spades_loop:
+    mov al, byte [si]
+    cmp al, 0x21
+    je print_card
+    mov byte [di], al
+    inc si
+    inc di
+    jmp assign_spades_loop
+
+print_card:
     mov ah, 0x13            ; move BIOS interrupt number in AH
     mov bx, 0               ; mov 0 to bx, so we can move it to es
     mov es, bx              ; move segment start of string to es, 0
-    
-checkAce:
-    cmp dh, 0x01
-    je sendToPrintAce
-    cmp dh, 0x0E
-    je sendToPrintAce
-    cmp dh, 0x1B
-    je sendToPrintAce
-    cmp dh, 0x28
-    je sendToPrintAce
-    jmp checkJack
-    
-checkJack:
-    cmp dh, 0x0B
-    je sendToPrintJack
-    cmp dh, 0x18
-    je sendToPrintJack
-    cmp dh, 0x25
-    je sendToPrintJack
-    cmp dh, 0x32
-    je sendToPrintJack
-    jmp checkQueen
-    
-checkQueen:
-    cmp dh, 0x0C
-    je sendToPrintQueen
-    cmp dh, 0x19
-    je sendToPrintQueen
-    cmp dh, 0x26
-    je sendToPrintQueen
-    cmp dh, 0x33
-    je sendToPrintQueen
-        
-checkKing:
-    cmp dh, 0x0D
-    je sendToPrintKing
-    cmp dh, 0x1A
-    je sendToPrintKing
-    cmp dh, 0x27
-    je sendToPrintKing
-    cmp dh, 0x34
-    je sendToPrintKing
-    
-checkNumber:
-    add dh, 0x30
-    call printNumber
-    
-    
-sendToPrintAce:
-    call printAce
-    
-sendToPrintJack:
-    call printJack
-    
-sendToPrintQueen:
-    call printQueen
-    
-sendToPrintKing:
-    call printKing
-    
-    
-check_suits:
-    call checkDiamond
-    call checkHeart
-    call checkClub
-    call checkSpade
-
-print_diamonds:
-    mov cx, 11              ; move length of string in cx
-    mov BP, OFFSET diamond   ; move start offset of string in bp
-    int 0x10                ; BIOS interrupt
-    jmp end
-    
-print_hearts:
-    mov cx, 9              ; move length of string in cx
-    mov BP, OFFSET heart   ; move start offset of string in bp
-    int 0x10               ; BIOS interrupt
-    jmp end
-    
-print_clubs:
-    mov cx, 8              ; move length of string in cx
-    mov BP, OFFSET club    ; move start offset of string in bp
-    int 0x10               ; BIOS interrupt
-    jmp end
-
-print_spades:
-    mov cx, 9              ; move length of string in cx
-    mov BP, OFFSET spade   ; move start offset of string in bp
-    int 0x10               ; BIOS interrupt
-    jmp end
-    
-
-
-end:
-
+    mov cx, 0x11
+    mov bp, OFFSET card_name
+    mov dl, 0
+    int 0x10
 
     

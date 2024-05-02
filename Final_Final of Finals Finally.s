@@ -1,3 +1,28 @@
+; Final Project: Blackjack
+;
+; CS 274
+; Susannah Cheezum and Eugene Thompson 
+; Implementing Blackjack in Assembly
+
+; Card Variables
+cards: 
+; Cards Numbered between 1 and 13 are in the Suit of Diamonds
+    db 0x01 db 0x02 db 0x03 db 0x04 db 0x05 db 0x06 db 0x07 
+    db 0x08 db 0x09 db 0x0A db 0x0B db 0x0C db 0x0D 
+
+; Cards Numbered between 14 and 26 are in the Suit of Hearts
+    db 0x0E db 0x0F db 0x10 db 0x11 db 0x12 db 0x13 db 0x14 
+    db 0x15 db 0x16 db 0x17 db 0x18 db 0x19 db 0x1A 
+
+; Cards Numbered between 27 and 39 are in the Suit of Clubs
+    db 0x1B db 0x1C db 0x1D db 0x1E db 0x1F db 0x20 db 0x21 
+    db 0x22 db 0x23 db 0x24 db 0x25 db 0x26 db 0x27 
+
+; Cards Numbered between 40 and 52 are in the Suit of Spades
+    db 0x28 db 0x29 db 0x2A db 0x2B db 0x2C db 0x2D db 0x2E 
+    db 0x2F db 0x30 db 0x31 db 0x32 db 0x33 db 0x34
+
+
 
 ; Random Number Generator Variables
 
@@ -51,9 +76,12 @@ def convertStringtoVal{
 	ret
 }
 
+
+
 def chooseRandomCard { 
+    ; Before Calling for the first time  (mov ax, word x_0) 
+    ; When calling again (mov ax, word_x_k)
 ; Load Relevant Values
-    mov ax, word x_0  ; load seed
     mov bx, word a    ; load regs bx, cx
     mov cx, word m
     

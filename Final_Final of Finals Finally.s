@@ -34,6 +34,27 @@ cards_used:
     db 0x00
     db [0x00, 0x9C] ; stores times cards used
 
+ace:
+    db "Ace!"
+ten:
+    db "10!"
+jack:
+    db "Jack!"
+queen:
+    db "Queen!"
+king:
+    db "King!"
+diamond:
+    db " of Diamonds!" 
+heart:
+    db " of Hearts!"
+club: 
+    db " of Clubs!"
+spade:
+    db " of Spades!"
+card_name:
+    db [0x00,0x11]
+
 ; Random Number Generator Variables
 
 x_0: 
@@ -102,6 +123,39 @@ def chooseRandomCard {
     mov word x_k, dx
     mov bx, 52
     div bx      ; ax mod bx, res to dx
+    ret
+}
+
+def checkSuit {
+    cmp dl, 0x0D ; Upper Limit of Diamonds (Adjust if Necessary)
+    jbe diamond_card
+    cmp dl, 0x1A ; Upper Limit of Hearts (Adjust if Necessary)
+    jbe heart_card
+    cmp dl, 0x27 ; Upper Limit of Clubs (Adjust if Necessary)
+    jbe club_card
+    cmp dl, 0x34 ; Upper Limit of Spades (Adjust if Necessary)
+    jbe spade_card
+    
+    ret
+}
+
+def checkSpecialValue {
+    cmp al, 0x01
+    je ace_card
+    
+    cmp al, 0x0A
+    je ten_card
+    
+    cmp al, 0x0B
+    je jack_card
+    
+    cmp al, 0x0C
+    je queen_card
+
+    cmp al, 0x0D
+    je king_card
+    
+    jmp assign_num
     ret
 }
 

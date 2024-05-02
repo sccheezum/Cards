@@ -601,6 +601,9 @@ ask_for_bet_again:
 	call askUserForBet
 	call convertStringtoVal
 
+user_place_bet:
+; Player places bet here!
+
 computer_place_bet:
 ; Computer places bet based off of the multiplier set by the betting mode
 

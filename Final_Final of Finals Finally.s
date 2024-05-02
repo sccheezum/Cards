@@ -51,7 +51,7 @@ def convertStringtoVal{
 	ret
 }
 
-def chooseRandomCard { ; DO THE REGISTERS NEED TO BE CHANGED FOR THIS PROCEDURE? 
+def chooseRandomCard { 
 ; Load Relevant Values
     mov ax, word x_0  ; load seed
     mov bx, word a    ; load regs bx, cx

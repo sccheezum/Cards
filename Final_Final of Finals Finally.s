@@ -1,4 +1,17 @@
-; TODO: 
+
+; Random Number Generator Variables
+
+x_0: 
+    dw 0x1563      ; current val, init as seed (x_0)
+a: 
+    dw 0x05        ; multiplier (a)
+m: 
+    dw 0x315d      ; large prime (m)
+x_k: 
+    dw 0x00        ; current iteration
+
+
+; Tracking Bets and Wins Variables:
 
 p_sum: db 0x14      ; keeping track of current player card sum / score
 c_sum: db 0x15      ; these values are currently assigned due to the IPA's isolation
@@ -11,18 +24,44 @@ c_total: dw 0x00c8  ; 200 for testing purposes
 p_wins: db 0x00     ; total wins for player and computer
 c_wins: db 0x00
 
+
+
 ; Universal Procedures:
-def convertValToString{
-; Converts Values to Strings for use in interface
+def convertStringtoVal{
+; Converts Strings to Values for use in interface
+    mov ah, 0
+    add di, ax      ; Adds the 1st Place to Count
+    
+    dec si              ; Proceed to Seconds Place
+    mov al, byte [si]   ; Obtains the Second Place Value
+    mov bl, 0x0A        ; Sets up the Hexadecimal Conversion
+    mul bl              ; Multiplies by Hexadecimal
+    add di, ax          ; Adds it to Count
+    
+    dec si              ; Proceed to Thirds Place
+    mov al, byte [si]   ; Obtains the Thirds Place Value
+    mov bl, 0x64        ; Sets up the 100s Hexadecimal Place
+    mul bl              ; Multiplies by Hexadecimal
+    add di, ax          ; Adds to Count
+
+    mov byte [si], ah
+    inc si
+    mov byte [si], al
+
 	ret
 }
 
 def chooseRandomCard { ; DO THE REGISTERS NEED TO BE CHANGED FOR THIS PROCEDURE? 
+; Load Relevant Values
+    mov ax, word x_0  ; load seed
+    mov bx, word a    ; load regs bx, cx
+    mov cx, word m
+    
+; Perform Lehmer's Algorithm
     mul bx      ; ax * bx
     div cx      ; ax mod cx, res to dx
     mov ax, dx
     mov word x_k, dx
-    inc si
     mov bx, 52
     div bx      ; ax mod bx, res to dx
     ret

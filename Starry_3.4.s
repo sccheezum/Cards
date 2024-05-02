@@ -13,7 +13,7 @@ num_decks_buffer:
     db 0x00
     db [0x00, 0x01]
     
-comp_bet_mode_buffer:
+c_bet_mode:
     db 0x00
     db [0x00, 0x01]
     

@@ -80,9 +80,123 @@ c_total: dw 0x00c8  ; 200 for testing purposes
 p_wins: db 0x00     ; total wins for player and computer
 c_wins: db 0x00
 
+; Configuration Buffers
+bet_buffer:
+    db 0x00
+    db [0x00, 0x04]
+    
+num_decks_buffer:
+    db 0x00
+    
+comp_keep_hand_buffer:
+    db 0x00
+    db [0x00, 0x04]
+    
+comp_add_card_buffer:
+    db 0x00
+    db [0x00, 0x04]
+    
+comp_forfeit_turn_buffer:
+    db 0x00
+    db [0x00, 0x04]
+    
+difficulty_level_buffer:
+    db 0x00
+    
+current_bet_buffer:
+    db 0x00
+    db [0x00, 0x04]
+    
+continue_game_buffer:
+    db 0x00
 
+user_choice_buffer:
+    db 0x00
+
+; Prompt Messages
+    
+initial_bet_msg:
+    db "Place your initial bet between $10 and $1000 above"
+    
+try_again_bet_msg:
+    db "Try again! Please make sure your bet is between $10 and $1000"
+    
+select_num_decks_msg:
+    db "Select how many decks you would like: (Choose between 1, 2, and 3)"
+    
+try_again_choice_msg:
+    db "Sorry, your response was incorrect, try again! Remember to choose 1, 2, or 3." 
+    
+choose_comp_bet_mode_msg:
+    db "Choose the Computer's Betting Mode from the following options:"
+
+conservative_option_msg:
+    db "Press '1' if you would like Conservative, the Computer bets 20% lower than you"
+    
+normal_option_msg:
+    db "Press '2' if you would like Normal, the Computer matches your bet"
+    
+aggressive_option_msg:
+    db "Press '3' if you would like Aggressive, the Computer outbets you by 30%"
+    
+choose_comp_risk_lvl_msg:
+    db "Choose the Computer's Risk Levels below:"
+
+comp_keep_hand_lvl_msg:
+    db "Input a number between 0-100, enter how likely the computer should keep its hand"
+    
+comp_add_card_lvl_msg:
+    db "Input a number between 0-100, enter how likely the computer should add a card"
+    
+comp_forfeit_turn_msg:
+    db "Input a number between 0-100, enter how likely the computer will forfeit a turn"
+    
+difficulty_mode_msg:
+    db "Choose the Game Difficulty Mode from the following options:"
+    
+easy_mode_msg:
+    db "Press '1' if you would like Easy, the Computer has 50% less money than you"
+    
+normal_mode_msg:
+    db "Press '2' if you would like Normal, the Computer has the same money as you"
+    
+hard_mode_msg:
+    db "Press '3' if you would like Hard, the Computer has 50% more money than you"
+    
+ask_bet_msg:
+    db "Place your Bets! Make sure you are betting how much you have left..."
+
+user_choice_msg:
+    db "Please indicate which choice you would like to make from the following options:"
+
+player_keep_hand_msg:
+    db "Press '1' if you would like to keep your current Hand!"
+
+player_add_card_msg:
+    db "Press '2' if you would like to add a card to your current Hand!"
+
+player_forfeit_card_msg:
+    db "Press '3' if you would like to forfeit your turn..."
+    
+winning_msg:
+    db "Congratulations, you won the bet!""
+    
+losing_msg:
+    db "Unfortunately, you lost the bet..."
+
+neither_won_message:
+    db "Neither side has won yet, there's still time to win!"
+    
+ask_another_turn_msg:
+    db "If you would like to continue, press '1' otherwise press '0' to quit"
+
+; Easter Egg for Later...    
+insufficient_funds_msg:
+    db "Insufficient Fundssssss YOU AIN'T GOT NO MONEY... oooohh"
+    
 
 ; Universal Procedures:
+
 def convertStringtoVal{
 ; Converts Strings to Values for use in interface
     mov ah, 0
@@ -107,8 +221,6 @@ def convertStringtoVal{
 	ret
 }
 
-
-
 def chooseRandomCard { 
     ; Before Calling for the first time  (mov ax, word x_0) 
     ; When calling again (mov ax, word_x_k)
@@ -126,6 +238,25 @@ def chooseRandomCard {
     ret
 }
 
+def chooseRandomAction { 
+    ; Before Calling for the first time  (mov ax, word x_0) 
+    ; When calling again (mov ax, word_x_k)
+; Load Relevant Values
+    mov bx, word a    ; load regs bx, cx
+    mov cx, word m
+    
+; Perform Lehmer's Algorithm
+    mul bx      ; ax * bx
+    div cx      ; ax mod cx, res to dx
+    mov ax, dx
+    mov word x_k, dx
+    mov bx, 100
+    div bx      ; ax mod bx, res to dx
+    ret
+}
+
+; Card-Related Procedures
+
 def checkSuit {
     cmp dl, 0x0D ; Upper Limit of Diamonds (Adjust if Necessary)
     jbe diamond_card
@@ -140,22 +271,22 @@ def checkSuit {
 }
 
 def checkSpecialValue {
-    cmp al, 0x01
+    cmp al, 0x01    ; Checks if current card is Ace
     je ace_card
     
-    cmp al, 0x0A
+    cmp al, 0x0A    ; Checks if current card is a Ten
     je ten_card
     
-    cmp al, 0x0B
+    cmp al, 0x0B    ; Checks if current card is a Jack
     je jack_card
     
-    cmp al, 0x0C
+    cmp al, 0x0C    ; Checks if current card is a Queen
     je queen_card
 
-    cmp al, 0x0D
+    cmp al, 0x0D    ; Checks if current card is a King
     je king_card
     
-    jmp assign_num
+    jmp assign_num  ; Otherwise output a number
     ret
 }
 
@@ -173,6 +304,30 @@ def chooseCompAction {
 ; Then, use Lehmer’s Algorithm (mod 100) to choose 
 ; Within those ranges, decide on the action
 ; Jumps to appropriate ranges within range
+
+    mov si, 0
+    mov ax, word x_0
+    call chooseRandomAction
+    lea ax, word comp_keep_hand_buffer      ; load the keep hand percent
+    lea bx, word comp_add_card_buffer       ; load the add card percent
+    
+    mov si, OFFSET comp_keep_hand_buffer    ; move the index to the keep hand val
+    mov di, OFFSET comp_add_card_buffer     ; move the index to the add card val
+    
+    mov al, byte [si]                       ; moving the keep hand val to al
+    mov bl, byte [di]                       ; moving the add card val to bl
+    
+    add bl, al                              ; add for the upper limit for add card
+    mov cl, 100                             ; assign upper limit for forfeit turn
+    
+    cmp dl, al                              ; checks between random num and keep hand 
+    jbe comp_keep_hand                      ; if under upper limit, go to keep hand
+    
+    cmp dl, bl                              ; check between random num and add card 
+    jbe comp_add_card                       ; if under upper limit go to add card
+    
+    cmp dl, cl                              ; check between random num and forfeit turn 
+    jbe comp_forfeit_turn                   ; if under upper limit go to forfeit turn
 	ret
 }
 ; Supplementary Procedures for User Config
@@ -530,14 +685,12 @@ _goto_next_deck:
     je end_game                 ; No more Decks? End the Game!
     add bl, 1                   ; Otherwise, go to next deck
     mov byte current_deck, bl   ; Move next deck to Current Deck Var
-    jmp display_cards           ; Display Cards
     
 ;
 ; Display Cards Section:
 ;
 
 display_cards:
-    mov dl, 0x0E            ; the Randomly Chosen Card to be printed out 
     mov al, dl              ; Assign the value of the card
     mov cl, 0x0D              ; Diviser for Finding Card Value
     mov di, OFFSET card_name
@@ -677,8 +830,6 @@ print_card:
     mov bp, OFFSET card_name
     mov dl, 0
     int 0x10
-    jmp user_choice
-
 user_choice:
 ; Ask User to Keep Hand, or
 ; Add One More Card, jumping to add_card
@@ -688,14 +839,18 @@ user_choice:
 comp_choice:
 	call chooseCompAction
 
-keep_hand:
+comp_keep_hand:
+
+p_keep_hand:
 ; Keeps Current Hand of the Player
 
-add_card:
-    call areCardsLeft
+p_add_card:
 	call chooseRandomCard
 	call displayCard
 
+p_add_card:
+    call chooseRandomCard
+    call displayCard
 comp_forfeit_turn:
 	jmp check_win
 	

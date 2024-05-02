@@ -119,8 +119,6 @@ neither_won_message:
     
 ask_another_turn_msg:
     db "If you would like to continue, press '1' otherwise press '0' to quit"
-    
-
 
 ; Easter Egg for Later...    
 insufficient_funds_msg:

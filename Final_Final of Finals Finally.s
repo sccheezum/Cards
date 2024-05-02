@@ -17,9 +17,15 @@ def convertValToString{
 	ret
 }
 
-def chooseRandomCard {
-; Using Lehmer’s Algorithm to choose a card
-	ret
+def chooseRandomCard { ; DO THE REGISTERS NEED TO BE CHANGED FOR THIS PROCEDURE? 
+    mul bx      ; ax * bx
+    div cx      ; ax mod cx, res to dx
+    mov ax, dx
+    mov word x_k, dx
+    inc si
+    mov bx, 52
+    div bx      ; ax mod bx, res to dx
+    ret
 }
 
 def areCardsLeft {

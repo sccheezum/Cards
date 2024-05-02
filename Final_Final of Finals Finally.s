@@ -803,13 +803,17 @@ check_win:
     mov bl, byte c_sum
     cmp al, 0x15 ; testing to see if player has reached 21
     je _p_win
+    cmp al, 0x15 ; testing to see if player has greater than 21
     jg _c_win
-    cmp bl, 0x15
+    cmp bl, 0x15 ; testing to see if comp has reached 21
     je _c_win
+    cmp bl, 0x15 ; testing to see if comp has greater than 21
     jg _p_win
-    cmp al, bl
+    cmp al, bl ; testing to see if there is a tie between player and comp
     je _tie
+    cmp al, bl ; testing to see if player won over comp
     jg _p_win
+    cmp al, bl ; testing to see if computer won over player
     jl _c_win
 ; Otherwise, if a player exceeds 21 in their current hand
 ; that turn is lost to that player, and the wins are given to the 		

@@ -304,10 +304,11 @@ start:
     mov bl, byte c_bet
     add al, 0x32       ; player bets 50 (NEED TO CHANGE VALUE TO INTERACT WITH USER)
     mov byte p_bet, al
-    cmp byte c_bet_mode, 0x01 ; comparing to determine what bet mode comp is in
-    jl _call_conservative 
-    je _call_normal
-    jg _call_aggressive
+; Error here, Comparison Arguments cannot be sent to procedures
+    ;cmp byte c_bet_mode, 0x01 ; comparing to determine what bet mode comp is in
+    ;jl _call_conservative 
+    ;je _call_normal
+    ;jg _call_aggressive
 _continue:
     mov al, byte p_sum
     mov bl, byte c_sum
@@ -422,7 +423,7 @@ start_turn:
 ask_for_bet_again:
 ; Add additional information to guide user, then asks them again
 	call askUserForBet
-	call convertValToString
+	call convertStringtoVal
 
 computer_place_bet:
 ; Computer places bet based off of the multiplier set by the betting mode
@@ -465,7 +466,7 @@ serve_computer_cards:
     cmp di, 2
     je user_choice
 ; Choose a Card:
-    call _lehmer_        ; gives random number
+    call chooseRandomCard        ; gives random number
     mov si, OFFSET cards ; load array of cards
     add si, dx           ; Finds the card in the card array
     mov bl, byte current_deck   ; Loads current Deck
@@ -499,7 +500,7 @@ _check_no_cards_left_loop:
 _loop_body:
     mov al, byte [si]           ; Load Card
     cmp al, 0x00                ; Check if Card has been used
-    je continue_game            ; If not, then continue game 
+    je display_cards            ; If not, then continue game 
     jmp _continue_loop          ; If used, continue loop    
 
 _continue_loop:
@@ -513,7 +514,7 @@ _goto_next_deck:
     je end_game                 ; No more Decks? End the Game!
     add bl, 1                   ; Otherwise, go to next deck
     mov byte current_deck, bl   ; Move next deck to Current Deck Var
-    jmp continue_game           ; Continue Turn
+    jmp display_cards           ; Display Cards
     
 ;
 ; Display Cards Section:
@@ -719,5 +720,5 @@ next_turn:
     mov di, 0
 	call askUserForNextTurn
 
-game_end:
+end_game:
 ; Displays Wins and which Player that Won

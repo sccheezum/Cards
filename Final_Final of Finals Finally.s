@@ -4,7 +4,7 @@
 ; Susannah Cheezum and Eugene Thompson 
 ; Implementing Blackjack in Assembly
 
-; Card Variables
+; Card and Deck Variables
 cards: 
 ; Cards Numbered between 1 and 13 are in the Suit of Diamonds
     db 0x01 db 0x02 db 0x03 db 0x04 db 0x05 db 0x06 db 0x07 
@@ -22,7 +22,17 @@ cards:
     db 0x28 db 0x29 db 0x2A db 0x2B db 0x2C db 0x2D db 0x2E 
     db 0x2F db 0x30 db 0x31 db 0x32 db 0x33 db 0x34
 
-
+player_hand:
+    db [0x00, 0x03]
+comp_hand:
+    db [0x00, 0x03]
+decks: 
+    db 0x02   ; number of decks being used, up to 3
+current_deck:
+    db 0x01
+cards_used: 
+    db 0x00
+    db [0x00, 0x9C] ; stores times cards used
 
 ; Random Number Generator Variables
 
@@ -350,6 +360,7 @@ invalid_difficulty:
 check_turn_requirements:
 	call checkAvailableFunds
 	call checkIfCompAll_In
+    jmp start_turn
 
 start_turn:
 	call askUserForBet
@@ -362,8 +373,94 @@ ask_for_bet_again:
 computer_place_bet:
 ; Computer places bet based off of the multiplier set by the betting mode
 
-receive_cards:
-; Calls the random card procedure twice per each opponent
+;
+; Dealing Cards Section:
+;
+
+serve_player_cards:
+    cmp di, 2
+    je reset_counter
+; Choose a Card:
+    call chooseRandomCard ; gives random number
+    mov si, OFFSET cards        ; load array of cards
+    add si, dx                  ; Finds the card in the card array
+    mov bl, byte current_deck   ; Loads current Deck
+    
+; Checks if Card was used:
+    mov ax, dx                  ; Move Card Val to AX
+    mul bl                      ; Finds the Indice for Card_Used array    
+    mov si, OFFSET cards_used   ; Load the array of used cards
+    add si, ax                  ; Finds the Card in the Used Card Array
+    cmp al, byte [si]           ; Check if card is already used
+    je serve_player_cards       ; If so, pick another card
+    mov byte [si], al           ; Store the Current Card in the array
+    
+; Loads Card to Player's Hand
+    mov si, OFFSET player_hand
+    add si, di
+    mov byte [si], al
+    inc di
+    mov ax, word x_k
+    jmp serve_player_cards
+
+reset_counter:
+    mov di, 0
+    jmp serve_computer_cards
+    
+serve_computer_cards:
+    cmp di, 2
+    je user_choice
+; Choose a Card:
+    call _lehmer_        ; gives random number
+    mov si, OFFSET cards ; load array of cards
+    add si, dx           ; Finds the card in the card array
+    mov bl, byte current_deck   ; Loads current Deck
+    
+; Checks if Card was used:
+    mov ax, dx                  ; Move Card Val to AX
+    mul bl                      ; Finds the Indice for Card_Used array    
+    mov si, OFFSET cards_used   ; Load the array of used cards
+    add si, ax                  ; Finds the Card in the Used Card Array
+    cmp al, byte [si]           ; Check if card is already used
+    je serve_computer_cards       ; If so, pick another card
+    mov byte [si], al           ; Store the Current Card in the array
+
+; Loads Card to Computer's Hand
+    mov si, OFFSET comp_hand
+    add si, di
+    mov byte [si], al
+    inc di
+    mov ax, word x_k
+    jmp serve_computer_cards
+
+_check_no_cards_left_loop:
+    mov si, OFFSET cards_used   ; Load the array of used cards
+    mov bl, byte current_deck   ; Loads current Deck
+    mov ax, si                  ; Setting Maximum Cap for Loop
+    mul bl                      ; Sets the Cap to the Current Deck
+    mov cx, ax                  ; Moves the Cap to CX
+    add cx, 52                  ; Move the Cap to the End of the Cards
+    jmp _loop_body
+    
+_loop_body:
+    mov al, byte [si]           ; Load Card
+    cmp al, 0x00                ; Check if Card has been used
+    je continue_game            ; If not, then continue game 
+    jmp _continue_loop          ; If used, continue loop    
+
+_continue_loop:
+    inc si                      ; Increment to Next Card
+    cmp si, cx                  ; If at end of the array, go to next deck
+    je _goto_next_deck          
+    jmp _loop_body              ; Otherwise, continue looping
+    
+_goto_next_deck:
+    cmp bl, byte decks          ; Checks Current Deck with Total Decks
+    je end_game                 ; No more Decks? End the Game!
+    add bl, 1                   ; Otherwise, go to next deck
+    mov byte current_deck, bl   ; Move next deck to Current Deck Var
+    jmp continue_game           ; Continue Turn
+    
 
 display_cards:
 ; Displays for the sets per opponents with the computer’s obscured
@@ -422,6 +519,7 @@ win_to_player:
 ; Transfers Computer’s Bet to User
 
 next_turn:
+    mov di, 0
 	call askUserForNextTurn
 
 game_end:

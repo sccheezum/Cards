@@ -431,7 +431,9 @@ computer_place_bet:
 ;
 ; Dealing Cards Section:
 ;
-
+initialize:
+    mov di, 0
+    mov ax, word x_0
 serve_player_cards:
     cmp di, 2
     je reset_counter

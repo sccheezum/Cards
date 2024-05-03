@@ -4,6 +4,30 @@
 ; Susannah Cheezum and Eugene Thompson 
 ; Implementing Blackjack in Assembly
 
+
+; Configuration Buffers
+initial_money_buffer:
+    dw 0x00
+    db [0x00, 0x04]
+num_decks_buffer:
+    db 0x00   
+comp_keep_hand_buffer:
+    db 0x00
+    db [0x00, 0x04]  
+comp_add_card_buffer:
+    db 0x00
+    db [0x00, 0x04]   
+comp_forfeit_turn_buffer:
+    db 0x00
+    db [0x00, 0x04]   
+difficulty_level_buffer:
+    db 0x00    
+continue_game_buffer:
+    db 0x00
+
+user_choice_buffer:
+    db 0x00
+
 ; Card and Deck Variables
 cards: 
 ; Cards Numbered between 1 and 13 are in the Suit of Diamonds
@@ -84,31 +108,6 @@ c_total:
 p_wins: 
     db 0x00     ; total wins for player and computer
 c_wins: 
-    db 0x00
-
-; Configuration Buffers
-initial_money_buffer:
-    dw 0x00
-    db [0x00, 0x04]
-num_decks_buffer:
-    db 0x00   
-comp_keep_hand_buffer:
-    db 0x00
-    db [0x00, 0x04]  
-comp_add_card_buffer:
-    db 0x00
-    db [0x00, 0x04]   
-comp_forfeit_turn_buffer:
-    db 0x00
-    db [0x00, 0x04]   
-difficulty_level_buffer:
-    db 0x00    
-
-    
-continue_game_buffer:
-    db 0x00
-
-user_choice_buffer:
     db 0x00
 
 ; Prompt Messages
@@ -546,9 +545,9 @@ def askForCompBetMode {
 ; Otherwise, jumps to invalid_comp_bet_mode
     mov al, byte [si]
     cmp al, 0x31
-    jl invalid_deck_selection
+    jl invalid_comp_bet_mode
     cmp al, 0x33
-    jg invalid_deck_selection
+    jg invalid_comp_bet_mode
     sub al, bl
     mov byte [si], al
 
@@ -622,22 +621,22 @@ def askDifficultyMode {
 ; User can choose between three computer difficulty levels:
 ; Easy, Normal, Hard (1,2,3)
     mov ah, 0x13
-    mov cx, 62
+    mov cx, 59
     mov bx, 0
     mov es, bx
     mov bp, OFFSET difficulty_mode_msg
     mov dl, 0
     int 0x10
     
-    mov cx, 78
+    mov cx, 74
     mov bp, OFFSET easy_mode_msg
     int 0x10
     
-    mov cx, 65
+    mov cx, 74
     mov bp, OFFSET normal_mode_msg
     int 0x10
     
-    mov cx, 71
+    mov cx, 74
     mov bp, OFFSET hard_mode_msg
     int 0x10
     
@@ -790,6 +789,7 @@ def print_tie_msg {
 
 def setCompInitialMoney {
     mov si, OFFSET initial_money_buffer
+    add si, 2
     mov ah, byte [si]
     inc si
     mov al, byte [si]
@@ -1446,11 +1446,7 @@ next_turn:
     mov di, 0
 	call askUserForNextTurn
 
-player_won_game:
-    call displayPlayerWonGame
 
-comp_won_game:
-    call displayCompWonGame
 
 end_game:
 ; Displays Wins and which Player that Won
@@ -1460,6 +1456,13 @@ end_game:
     mov bl, byte c_wins
     cmp al, bl
     jg player_won_game
+    cmp al, bl
     jl comp_won_game
+    
+player_won_game:
+    call displayPlayerWonGame
 
+comp_won_game:
+    call displayCompWonGame
+    
 _terminate:

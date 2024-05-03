@@ -76,7 +76,7 @@ c_sum:
 p_bet: 
     db 0x00      ; player & computer bet stores
 c_bet: 
-    db 0x00
+    dw 0x0000
 c_bet_mode: 
     db 0x00 ; computer betting mode (0 - conservative, 1 - normal, 2 - aggressive)
 c_total: 
@@ -192,6 +192,10 @@ ask_another_turn_msg:
 insufficient_funds_msg:
     db "Insufficient Fundssssss YOU AIN'T GOT NO MONEY... oooohh"
     
+computer_won_game_msg:
+    db "You have lost to the computer... better luck next time!"
+player_won_game_msg:
+    db "Congratulations, you have won the game!"
 
 ; Universal Procedures:
 
@@ -475,28 +479,31 @@ def askForNumDecks {
 
 ; add in three mode definitions
 def _conservative{ ; 20% smaller bet from computer
+    mov ah, 0x00
     mov al, byte p_bet
     mov bl, 0x04
     mul bl
     mov bl, 0x05
     div bl
-    mov byte c_bet, al
+    mov word c_bet, ax
     ret
 }
 
 def _normal{ ; computer bet matches player
+    mov ah, 0x00
     mov al,  byte p_bet
-    mov byte c_bet, al
+    mov word c_bet, ax
     ret
 }
 
 def _aggressive{ ; 30% larger bet from computer
+    mov ah, 0x00
     mov al, byte p_bet
     mov bl, 0x0d
     mul bl
     mov bl, 0x0a
     div bl
-    mov byte c_bet, al
+    mov word c_bet, ax
     ret
 }
 
@@ -526,11 +533,11 @@ def askForCompBetMode {
     
     ; System waits for response
     mov ah, 0x0a
-    lea dx, word comp_bet_mode_buffer
+    lea dx, word c_bet_mode
     ; Using interrupt (0x21) here to read input
     int 0x21 
     
-    mov si, OFFSET comp_bet_mode_buffer
+    mov si, OFFSET c_bet_mode
     add si, 2
     mov bl, 0x30
 
@@ -662,7 +669,7 @@ def askDifficultyMode {
 def askUserForBet {
 ; Asks User how much they want to bet from their pool
     mov ah, 0x13
-    mov cx, 62
+    mov cx, 68
     mov bx, 0
     mov es, bx
     mov bp, OFFSET ask_bet_msg
@@ -719,11 +726,11 @@ def askUserForChoice {
     cmp al, 0x33
     jg user_choice
     cmp al, 0x31
-    je keep_hand
+    je p_keep_hand
     cmp al, 0x32
-    je add_card
+    je p_add_card
     cmp al, 0x33
-    je player_forfeit_turn
+    je p_forfeit_turn
 }
 
 
@@ -769,8 +776,20 @@ def displayUserLost {
     ret
 }
 
+def print_tie_msg {
+    mov ah, 0x13
+    mov cx, 50
+    mov bx, 0
+    mov es, bx
+    mov bp, OFFSET neither_won_message
+    mov dl, 0
+    int 0x10
+    ret
+}
+
+
 def setCompInitialMoney {
-    mov si, OFFSET bet_buffer
+    mov si, OFFSET initial_money_buffer
     mov ah, byte [si]
     inc si
     mov al, byte [si]
@@ -798,6 +817,11 @@ def checkIfCompAll_In {
 ; Checks if the computer has funds
 ; If it is lower than the human bet adjusted by its policy,
 ; then the Computer goes All In!
+    mov ax, word c_total
+    mov bx, word c_bet
+    cmp ax, bx
+    jbe go_all_in
+    jmp initialize
 	ret
 }
 
@@ -837,12 +861,24 @@ def askUserForNextTurn {
 }
 
 def displayPlayerWonGame {
-
+    mov ah, 0x13
+    mov cx, 50
+    mov bx, 0
+    mov es, bx
+    mov bp, OFFSET player_won_game_msg
+    mov dl, 0
+    int 0x10
     jmp _terminate
 }
 
 def displayCompWonGame {
-
+    mov ah, 0x13
+    mov cx, 50
+    mov bx, 0
+    mov es, bx
+    mov bp, OFFSET computer_won_game_msg
+    mov dl, 0
+    int 0x10
     jmp _terminate
 }
     
@@ -970,14 +1006,10 @@ invalid_difficulty:
 
 ; Turns and Player Actions:
 
-
-check_turn_requirements:
-	call checkAvailableFunds
-	call checkIfCompAll_In
-    jmp start_turn
-
 start_turn:
 	call askUserForBet
+	call convertStringtoVal
+	jmp place_bet
 
 ask_for_bet_again:
 ; Add additional information to guide user, then asks them again
@@ -988,8 +1020,7 @@ place_bet:
 ; Player placed bet based on the previous labels
 ; Computer places bet based off of the multiplier set by the betting mode
     mov al, byte p_bet
-    mov bl, byte c_bet
-    add al, 0x32       ; player bets 50 (NEED TO CHANGE VALUE TO INTERACT WITH USER)
+    mov bx, word c_bet
     mov byte p_bet, al
     cmp byte c_bet_mode, 0x01 ; comparing to determine what bet mode comp is in
     jl _call_conservative 
@@ -1000,16 +1031,25 @@ place_bet:
 
 _call_conservative:
     call _conservative
-    jmp initialize
+    jmp check_turn_requirements
     
 _call_normal:
     call _normal
-    jmp initialize
+    jmp check_turn_requirements
     
 _call_aggressive:
     call _aggressive
-    jmp initialize
+    jmp check_turn_requirements
     
+
+check_turn_requirements:
+	call checkAvailableFunds
+	call checkIfCompAll_In
+
+go_all_in:
+; Computer Goes All In!
+    mov word c_bet, ax
+    jmp initialize
 
 ;
 ; Dealing Cards Section:
@@ -1340,16 +1380,15 @@ check_win:
 ; opponent (either win_ to_comp or win_to_player)
 
 _tie:
-    jmp _end
     jmp check_turn_requirements
     ; Display to the user that the round ended in a tie so no one won
-    ; (to be completed later with the rest of the front end work)
+    
 
 _p_win:
     mov al, byte p_wins
     inc al
     mov byte p_wins, al
-    mov al, byte c_bet
+    mov ax, word c_bet
     mov bl, byte initial_money_buffer
     mov cl, byte c_total
     add bl, al

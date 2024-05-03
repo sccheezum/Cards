@@ -7,8 +7,14 @@
 
 ; Configuration Buffers
 initial_money_buffer:
-    dw 0x00
+    db 0x00
     db [0x00, 0x04]
+c_bet_mode: 
+    db 0x00 ; computer betting mode (1 - conservative, 2 - normal, 3 - aggressive)
+c_total: 
+    dw 0x0000  ; total amount of money available for the computer
+difficulty_level_buffer:
+    db 0x00  
 num_decks_buffer:
     db 0x00   
 comp_keep_hand_buffer:
@@ -20,8 +26,7 @@ comp_add_card_buffer:
 comp_forfeit_turn_buffer:
     db 0x00
     db [0x00, 0x04]   
-difficulty_level_buffer:
-    db 0x00    
+  
 continue_game_buffer:
     db 0x00
 
@@ -101,10 +106,6 @@ p_bet:
     db 0x00      ; player & computer bet stores
 c_bet: 
     dw 0x0000
-c_bet_mode: 
-    db 0x00 ; computer betting mode (0 - conservative, 1 - normal, 2 - aggressive)
-c_total: 
-    dw 0x0000  ; total amount of money available for the computer
 p_wins: 
     db 0x00     ; total wins for player and computer
 c_wins: 
@@ -647,7 +648,6 @@ def askDifficultyMode {
     int 0x21 
     
     mov si, OFFSET difficulty_level_buffer
-    add si, 2
     mov bl, 0x30
 
 ; System checks if the response is valid
@@ -795,6 +795,7 @@ def setCompInitialMoney {
     mov al, byte [si]
 
     mov si, OFFSET difficulty_level_buffer
+    dec si
     mov bl, byte [si]
     sub bl, 1
     
@@ -805,6 +806,7 @@ def setCompInitialMoney {
     je set_hard_money
 
     mov si, OFFSET c_total
+    dec si
     mov byte [si], ah
     inc si
     mov byte [si], al
@@ -929,7 +931,7 @@ continue_user_config:
 risk_level_config:
     mov di, 0
 	call askForCompRiskLevel
-	call askDifficultyMode
+    call askDifficultyMode
     call setCompInitialMoney
 
 set_easy_money:

@@ -738,7 +738,11 @@ def checkAvailableFunds {
 ; If available funds for both opponents
 ; If yes, continue turn
 ; if no, end game, and indicate who lost
-    mov ax, word c_total
+    mov si, OFFSET c_total
+    dec si
+    mov ah, byte [si]
+    inc si
+    mov al, byte [si]
     mov si, OFFSET initial_money_buffer
     mov bh, byte [si]
     inc si
